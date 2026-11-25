@@ -1,329 +1,119 @@
-# 💻 Trabajo Final Integrador | Programación III 2025 - 2do cuatrimestre
-# 👨‍💻 Grupo-AL: Andres Labra, Demian Diak, Ezequiel Sanchez, Micaela Ortiz #
+# 🎉 API de Reservas de Salones de Cumpleaños
 
-Diseñamos y desarrollamos una API REST para la gestión de reservas de salones de cumpleaños. Utilizamos **Node.js** + **Express**. La aplicación está estructurada con una arquitectura en capas y contempla las buenas prácticas vistas en clase.
-Incluye:
-- Autenticación con JWT + Passport y autorización por roles
-- Validación de datos haciendo uso de middleware express-validator
-- Documentación Swagger. 
-- Funcionalidad extra: dashboard de Informes Estadísticos en HTML, CSS y JavaScript.
+API REST para gestionar reservas de salones de cumpleaños: salones, turnos, servicios adicionales, usuarios con roles, informes en PDF/CSV, notificaciones por mail y un dashboard de estadísticas.
+
+Es el **Trabajo Final Integrador de Programación III** (2025, 2.º cuatrimestre) de la Tecnicatura Universitaria en Desarrollo Web (UNER). Lo desarrollé **en equipo** con otros tres compañeros.
+
+> 📌 Esta es una copia en mi cuenta personal del repositorio original del grupo: [PROG3-AL/grupo-AL](https://github.com/PROG3-AL/grupo-AL). El historial de commits completo está incluido.
 
 ---
 
-# 🔒 **Ejemplo de archivo .env**
-```
-PORT=3000
+## 🛠️ Tecnologías
 
-DB_HOST=localhost
-DB_USER=administradorTFIPROG3
-DB_PASSWORD=passadministradorTFIPROG3!
-DB_NAME=reservas
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express_5-000000?style=flat&logo=express&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)
 
-EMAIL_USER=programacion3ejemplo@gmail.com
-EMAIL_PASS=clavedeaplicacion
+- **Node.js + Express 5**, con ES Modules
+- **MySQL** (`mysql2`) con procedimientos almacenados para las estadísticas
+- **Passport + JWT** para la autenticación
+- **express-validator** para validar los datos de entrada
+- **Swagger** (`swagger-jsdoc` + `swagger-ui-express`) para la documentación
+- **Nodemailer** para las notificaciones por correo
+- **Puppeteer + Handlebars** para los informes en PDF, y **csv-writer** para los CSV
+- **apicache** para el caché de respuestas, **Morgan** para los logs
+- **HTML, CSS y JavaScript** para el dashboard de estadísticas
 
-JWT_SECRET=claveJWTGrupoAL
-```
+## ✨ Funcionalidades
+
+- **Arquitectura en capas:** rutas → middlewares → controladores → servicios → capa de datos.
+- **Autenticación con JWT** y **autorización por roles**:
+  - **Administrador:** acceso total, informes y estadísticas.
+  - **Empleado:** gestión operativa; ve solo el listado de clientes.
+  - **Cliente:** crea y consulta sus propias reservas.
+- **CRUD completo** de salones, turnos, servicios, usuarios y reservas, con borrado lógico y reactivación.
+- **Contraseñas cifradas** con SHA-2.
+- **Notificaciones por mail** al crear una reserva, con copia oculta (CCO) a los administradores.
+- **Informes descargables** de reservas en **PDF** y **CSV**.
+- **Dashboard de estadísticas**: salones más reservados, servicios más solicitados y turnos más elegidos.
+- **API versionada** (`/api/v1`) y documentada con Swagger.
+
+## 🔗 Endpoints principales
+
+| Recurso | Ruta base |
+|---|---|
+| Usuarios y login | `/api/v1/usuarios` (`POST /login`) |
+| Salones | `/api/v1/salones` |
+| Turnos | `/api/v1/turnos` |
+| Servicios | `/api/v1/servicios` |
+| Reservas e informe | `/api/v1/reservas` (`GET /informe`) |
+| Estadísticas | `/api/v1/estadisticas` |
+| Documentación | `/api-docs` |
+| Dashboard | `/dashboard.html` |
+
+## 🙋‍♂️ Mi aporte
+
+Participé en todo el proyecto. Me encargué principalmente de:
+
+- La **documentación Swagger** de la API (usuarios, estadísticas y el resto de los recursos).
+- El módulo de **usuarios**: cifrado de contraseñas y permisos por rol.
+- El **envío de mails** de confirmación de reservas, con CCO a administradores.
+- El **listado de reservas** según el rol del usuario (los clientes solo ven las suyas).
+- La implementación del **caché** con apicache y la separación entre `servidor.js` y `reservas.js`.
+- Las **pruebas de endpoints** con la colección de **Bruno**, y el **README** del proyecto.
+
+## 👥 Equipo
+
+- **Andrés Labra**
+- **Demian Diak**
+- **Ezequiel Sánchez**: [GitHub](https://github.com/zequisanchez) · [LinkedIn](https://www.linkedin.com/in/ezequieleduardosanchez)
+- **Micaela Ortiz**
+
 ---
 
-## 📋 Configuración e instalación de la app
+## 📋 Instalación
 
-### 1. Configuración de base de datos
+### Requisitos
+- Node.js 18 o superior
+- MySQL 8
 
-Crear un usuario administrador con todos los privilegios en MySQL para la tabla reservas:
-```sql
-CREATE USER 'administradorTFIPROG3'@'localhost' IDENTIFIED BY 'passadministradorTFIPROG3!';
-```
-```sql
-GRANT ALL PRIVILEGES ON reservas.* TO 'administradorTFIPROG3'@'localhost';
-```
-```sql
-FLUSH PRIVILEGES;
-```
-
-### 2. Importar procedimientos almacenados en MySQL
-
-Importar el archivo `estadisticasProcedAlma.sql` ubicado en la carpeta `database/` del proyecto.
-
-### 3. Configurar variables de entorno
-
-Crear un archivo `.env` en la raíz del proyecto. En el punto anterior se muestra el ejemplo de variables de entorno.
-
-### 4. Instalar dependencias
+### 1. Clonar e instalar dependencias
 ```bash
+git clone https://github.com/zequisanchez/api-reservas-salones.git
+cd api-reservas-salones/TFI-GrupoAL
 npm install
 ```
 
-### 5. Iniciar el servidor
+### 2. Base de datos
+Crear un usuario de MySQL con permisos sobre la base `reservas`:
+```sql
+CREATE USER 'tu_usuario_mysql'@'localhost' IDENTIFIED BY 'tu_password_mysql';
+GRANT ALL PRIVILEGES ON reservas.* TO 'tu_usuario_mysql'@'localhost';
+FLUSH PRIVILEGES;
+```
+Después, importar los procedimientos almacenados de `TFI-GrupoAL/src/scripts/estadisticasProcedAlma.sql`.
+
+### 3. Variables de entorno
+Copiar `.env.example` como `.env` dentro de `TFI-GrupoAL/` y completar los datos:
+```env
+PORT=3000
+DB_HOST=localhost
+DB_USER=tu_usuario_mysql
+DB_PASSWORD=tu_password_mysql
+DB_NAME=reservas
+EMAIL_USER=tu_correo@gmail.com
+EMAIL_PASS=tu_contraseña_de_aplicacion
+CLAVE_JWT=una_clave_secreta_larga
+```
+> Para `EMAIL_PASS` hay que usar una [contraseña de aplicación de Google](https://myaccount.google.com/apppasswords), no la contraseña común de la cuenta.
+
+### 4. Iniciar el servidor
 ```bash
-npm run dev
+npm run dev     # desarrollo, se reinicia solo con cada cambio
+npm start       # producción
 ```
 
-El servidor estará disponible en 👉 `http://localhost:3000`
-
-### 6. Documentación Swagger UI
-
-La documentación de la API estará disponible en 👉 `http://localhost:3000/api-docs`
-
-### 7. Funcionalidad extra - Dashboard de Informes Estadísticos
-
-El dashboard se encuentra disponible sin autenticación, con fines prácticos de demostración.
-
-Se puede visualizar en 👉 `http://localhost:3000/api/v1/estadisticas/dashboard`
-
----
-
-## 🎨 Funcionalidad Extra: Dashboard de Informes Estadísticos
-
-El dashboard está desarrollado en HTML, CSS y JavaScript. Visualiza las estadísticas en tiempo real sobre los salones, servicios y turnos más solicitados del sistema de reservas. Los datos se actualización automáticamente al cargar la página.
-
- ** 💡 Importante: **
-El dashboard se encuentra disponible sin autenticación con fines prácticos de demostración.
-Se puede visualizar, una vez iniciado el servidor e importado los procedimientos almacenados, en 👉 http://localhost:3000/api/v1/estadisticas/dashboard
-
-### Características
-
-- Los datos son generados mediante procedimientos almacenados ubicados en `src/scripts/estadisticasProcedAlma.sql`:
-
-    - **`sp_salones_mas_reservados()`**: Devuelve salones ordenados por cantidad de reservas e ingresos
-    - **`sp_servicios_mas_solicitados()`**: Devuelve servicios ordenados por veces solicitado e ingresos
-    - **`sp_turnos_mas_reservados()`**: Devuelve turnos ordenados por cantidad de reservas
-
-- Arquitectura en capas (Router → Controlador → Servicio → Capa de datos)
-- Frontend con Fetch API para comunicación asíncrona
-- Diseño responsive con CSS Grid
-
-### Endpoints del dashboard de Informes Estadísticos
-
-#### Rutas públicas (sin autenticación)
-```
-GET /api/v1/estadisticas/dashboard           # Vista HTML del dashboard
-GET /api/v1/estadisticas/dashboard/salones   # Datos de salones (JSON)
-GET /api/v1/estadisticas/dashboard/servicios # Datos de servicios (JSON)
-GET /api/v1/estadisticas/dashboard/turnos    # Datos de turnos (JSON)
-```
-
-#### Rutas protegidas (requieren autenticación de administrador)
-```
-GET /api/v1/estadisticas/salones-mas-reservados
-GET /api/v1/estadisticas/servicios-mas-solicitados
-GET /api/v1/estadisticas/turnos-mas-reservados
-```
-
-### Características de diseño
-
-- Utilizamos el mismo sistema de diseño que el proyecto realizado en la materia Introduccción a la Programación, con el fin de alcanzar la coherencia estética y reutilizar el UI Kit ya creado
-- Grid responsive adaptable a móviles, tablets y desktop
-- Estados de carga y manejo de errores
-
----
-
-## 📁 Estructura del Proyecto
-
-```bash
-TFI-GrupoAl/
-│
-├── 📂 src/
-│   ├── 🧠 servidor.js                 # Configuración de Express () --- Inicia y configura el servidor---
-│   ├── 🚀 reservas.js                 # Punto de entrada de la app -- Configura la aplicación Express---
-│   ├── 📘 swagger.js                  # Configuración de Swagger  --- Genera y muestra la documentación Swagger de la API. --
-│   │
-│   ├── 📂 database/                   # Conexión y consultas SQL
-│   │   ├── conexion.js
-│   │   ├── estadisticas.js
-│   │   ├── reservas.js
-│   │   ├── reservas_servicios.js
-│   │   ├── salones.js
-│   │   ├── servicios.js
-│   │   ├── turnos.js
-│   │   └── usuarios.js
-│   │
-│   ├── 📂 controllers/                # Gestionan la lógica entre rutas y servicios
-│   │   ├── usuariosControlador.js
-│   │   ├── reservasControlador.js
-│   │   ├── salonesControlador.js
-│   │   ├── serviciosControlador.js
-│   │   ├── turnosControlador.js
-│   │   └── estadisticasControlador.js
-│   │
-│   ├── 📂 services/                   # Capa intermedia: lógica de negocio y consultas SQL
-│   │   ├── estadisticasServicio.js
-│   │   ├── informeServicio.js 
-│   │   ├── notificacionesServicio.js
-│   │   ├── usuariosServicio.js 
-│   │   ├── reservasServicio.js
-│   │   ├── salonesServicio.js
-│   │   ├── serviciosServicio.js
-│   │   └── turnosServicio.js
-│   │
-│   ├── ⚙️ middlewares/                
-│   │   ├── autenticacion.js      # Autenticación JWT con Passport
-│   │   ├── autorizar.js          # Autorización según rol de usuario
-│   │   ├── passport.js           # Configuración de estrategia Passport JWT
-│   │   ├── validarCampos.js      
-│   │   ├── validarReservas.js    
-│   │   ├── validarSalones.js     
-│   │   ├── validarUsuarios.js    
-│   │   ├── validarTurnos.js      
-│   │   └── validarServices.js    
-│   │
-│   ├── 📜 scripts/
-│   │   └── estadisticasProcedAlma.sql   # Procedimientos almacenados para estadísticas
-│   │
-│   ├── 🌐 v1/
-│   │   └── routes/                     
-│   │       ├── estadisticasRouter.js
-│   │       ├── usuariosRouter.js
-│   │       ├── reservasRouter.js
-│   │       ├── salonesRouter.js
-│   │       ├── serviciosRouter.js
-│   │       └── turnosRouter.js
-│   │
-│   ├── 💬 views/                       # Plantillas Handlebars
-│   │   ├── layouts/
-│   │   │   └── main.handlebars
-│   │   └── pages/
-│   │       ├── informePDF.handlebars
-│   │       └── reservaCreada.handlebars
-│   │
-│   └── 🧰 utils/
-│       ├── JWT.js                      # Generación/verificación de tokens JWT
-│       └── reservas.csv
-│ 
-├── 🎨 public/                          # Recursos estáticos del frontend
-│   ├── css/
-│   │   └── style.css
-│   ├── js/
-│   │   └── dashboard.js                # Lógica del dashboard
-│   ├── img/
-│   ├── uploads/
-│   └── dashboard.html
-│
-├── ⚙️ .env                             # Variables de entorno
-├── 🚫 .gitignore
-├── 📦 package.json
-└── 📦 package-lock.json
-```
----
-
-### 📓 Gestión de roles y permisos
-
-#### Clientes
-- Autenticación mediante JWT
-- Crear y listar reservas
-- Consultar salones, servicios y turnos disponibles
-- Recibir notificaciones automáticas por email al confirmar reservas
-
-#### Empleados
-- Autenticación mediante JWT
-- Visualizar listado de reservas y clientes
-- BREAD completo para:
-  - salones
-  - servicios
-  - turnos
-
-#### Administradores
-- Autenticación mediante JWT
-- BREAD completo de todas las entidades:
-  - reservas
-  - salones
-  - servicios
-  - turnos
-  - usuarios
-- Generación de informes estadísticos mediante procedimientos almacenados
-- Exportación de reportes en PDF y CSV
-- Recepción de notificaciones automáticas cuando se realiza una reserva
-
----
-
-### 📚 Aspectos técnicos:
-
-- Los delete no son borrados físicos, utilizamos soft delete.
-- Solo los administradores pueden modificar reservas.
-- Los informes estadísticos se generan mediante procedimientos almacenados.
-- Los informes PDF contienen: datos de reserva, servicios, salón, turno y cliente
-
-
----
-
-## 📌 Endpoints de la API
-
-### Autenticación
-```
-POST   /api/v1/usuarios/login          # Iniciar sesión
-```
-
-### Usuarios
-```
-GET    /api/v1/usuarios                # Listar usuarios (Admin, Empleado)
-GET    /api/v1/usuarios/:id            # Obtener usuario por ID (Admin, Empleado)
-POST   /api/v1/usuarios                # Crear usuario (público)
-PUT    /api/v1/usuarios/:id            # Actualizar usuario (Admin)
-DELETE /api/v1/usuarios/:id            # Desactivar usuario - soft delete (Admin)
-PATCH  /api/v1/usuarios/:id            # Activar usuario (Admin)
-```
-
-### Reservas
-```
-GET    /api/v1/reservas                # Listar reservas (Admin, Empleado, Cliente)
-GET    /api/v1/reservas/:id            # Obtener reserva por ID (Admin, Empleado)
-POST   /api/v1/reservas                # Crear reserva (Admin, Cliente)
-PUT    /api/v1/reservas/:id            # Actualizar reserva (Admin)
-DELETE /api/v1/reservas/:id            # Desactivar reserva - soft delete (Admin)
-```
-### Informes
-```
-GET    /api/v1/reservas/informe?formato=pdf   # Generar informe en PDF (Admin)
-GET    /api/v1/reservas/informe?formato=csv   # Generar informe en CSV (Admin)
-```
-
-### Salones
-```
-GET    /api/v1/salones                 # Listar salones (Admin, Empleado, Cliente)
-GET    /api/v1/salones/:id             # Obtener salón por ID (Admin, Empleado)
-POST   /api/v1/salones                 # Crear salón (Admin, Empleado)
-PUT    /api/v1/salones/:id             # Actualizar salón (Admin, Empleado)
-DELETE /api/v1/salones/:id             # Desactivar salón - soft delete (Admin, Empleado)
-```
-
-### Servicios
-```
-GET    /api/v1/servicios               # Listar servicios (Admin, Empleado, Cliente)
-GET    /api/v1/servicios/:id           # Obtener servicio por ID (Admin, Empleado)
-POST   /api/v1/servicios               # Crear servicio (Admin, Empleado)
-PUT    /api/v1/servicios/:id           # Actualizar servicio (Admin, Empleado)
-DELETE /api/v1/servicios/:id           # Desactivar servicio - soft delete (Admin, Empleado)
-PATCH  /api/v1/servicios/:id/activar   # Activar servicio (Admin, Empleado)
-```
-
-### Turnos
-```
-GET    /api/v1/turnos                  # Listar turnos (Admin, Empleado, Cliente)
-GET    /api/v1/turnos/:id              # Obtener turno por ID (Admin, Empleado)
-POST   /api/v1/turnos                  # Crear turno (Admin, Empleado)
-PUT    /api/v1/turnos/:id              # Actualizar turno (Admin, Empleado)
-DELETE /api/v1/turnos/:id/desactivar   # Desactivar turno - soft delete (Admin, Empleado)
-```
-
-### Informes estadísticos
-#### Rutas con autenticación requerida (Admin)
-```
-GET    /api/v1/estadisticas/salones-mas-reservados      # Estadísticas de salones
-GET    /api/v1/estadisticas/servicios-mas-solicitados   # Estadísticas de servicios
-GET    /api/v1/estadisticas/turnos-mas-reservados       # Estadísticas de turnos
-```
-
-#### Rutas públicas (Dashboard)
-```
-GET    /api/v1/estadisticas/dashboard           # Vista HTML
-GET    /api/v1/estadisticas/dashboard/salones   # Datos de salones (JSON)
-GET    /api/v1/estadisticas/dashboard/servicios # Datos de servicios (JSON)
-GET    /api/v1/estadisticas/dashboard/turnos    # Datos de turnos (JSON)
-```
----
-
-## 📝 Licencia
-
-Este proyecto fue desarrollado con fines académicos como Trabajo Final Integrador de la materia Programación III (2do cuatrimestre 2025) - Tecnicatura Universitaria en Desarrollo Web - Facultad de Ciencias de la Administración - Universidad Nacional de Entre Ríos (UNER).
-
----
+La API queda en `http://localhost:3000`, la documentación en `http://localhost:3000/api-docs` y el dashboard en `http://localhost:3000/dashboard.html`.
